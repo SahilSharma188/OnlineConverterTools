@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Word Counter";
+}
+
+<div class="container">
+    <h2 class="mb-4">Word Counter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="text" class="form-label">Text</label>
+                <textarea class="form-control" id="text" rows="10" placeholder="Enter or paste your text here..."></textarea>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button onclick="countWords()" class="btn btn-primary">Count</button>
+                <button onclick="clearText()" class="btn btn-outline-danger">Clear</button>
+            </div>
+
+            <div class="mt-4" id="result" style="display: none;">
+                <h4>Statistics</h4>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1">Words: <span id="wordCount">0</span></p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1">Characters: <span id="charCount">0</span></p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1">Characters (no spaces): <span id="charNoSpaceCount">0</span></p>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <p class="mb-1">Lines: <span id="lineCount">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function countWords() {
+            const text = document.getElementById('text').value;
+            
+            if (!text) {
+                alert('Please enter some text');
+                return;
+            }
+
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            const chars = text.length;
+            const charsNoSpace = text.replace(/\s/g, '').length;
+            const lines = text.split('\n').filter(line => line.trim().length > 0).length;
+
+            document.getElementById('wordCount').textContent = words.length;
+            document.getElementById('charCount').textContent = chars;
+            document.getElementById('charNoSpaceCount').textContent = charsNoSpace;
+            document.getElementById('lineCount').textContent = lines;
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function clearText() {
+            document.getElementById('text').value = '';
+            document.getElementById('result').style.display = 'none';
+        }
+
+        // Count words as user types
+        document.getElementById('text').addEventListener('input', countWords);
+    </script>
+} 

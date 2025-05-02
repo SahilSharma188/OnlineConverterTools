@@ -1,0 +1,99 @@
+@{
+    ViewData["Title"] = "Java to JSON";
+}
+
+<div class="container">
+    <h2 class="mb-4">Java Class to JSON Converter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="javaInput" class="form-label">Java Class Input</label>
+                    <textarea class="form-control" id="javaInput" rows="15" placeholder="Paste your Java class here..."></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="jsonOutput" class="form-label">JSON Output</label>
+                    <textarea class="form-control" id="jsonOutput" rows="15" readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button onclick="convertToJson()" class="btn btn-primary">Convert to JSON</button>
+                <button onclick="clearInputs()" class="btn btn-outline-danger">Clear</button>
+                <button onclick="copyToClipboard()" class="btn btn-outline-secondary">Copy JSON</button>
+            </div>
+
+            <div class="alert alert-danger d-none" id="error"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function convertToJson() {
+            try {
+                const javaInput = document.getElementById('javaInput').value;
+                if (!javaInput) {
+                    throw new Error('Please enter Java class to convert');
+                }
+
+                const json = parseJavaToJson(javaInput);
+                document.getElementById('jsonOutput').value = JSON.stringify(json, null, 2);
+                document.getElementById('error').classList.add('d-none');
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        function parseJavaToJson(javaCode) {
+            const properties = {};
+            const lines = javaCode.split('\n');
+            
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.startsWith('private')) {
+                    const match = trimmedLine.match(/private\s+(\w+)\s+(\w+);/);
+                    if (match) {
+                        const [, type, name] = match;
+                        properties[name] = getDefaultValue(type);
+                    }
+                }
+            }
+            
+            return properties;
+        }
+
+        function getDefaultValue(type) {
+            switch (type.toLowerCase()) {
+                case 'string': return '';
+                case 'int': return 0;
+                case 'double': return 0.0;
+                case 'float': return 0.0;
+                case 'boolean': return false;
+                case 'date': return new Date().toISOString();
+                case 'list': return [];
+                case 'map': return {};
+                default: return null;
+            }
+        }
+
+        function clearInputs() {
+            document.getElementById('javaInput').value = '';
+            document.getElementById('jsonOutput').value = '';
+            document.getElementById('error').classList.add('d-none');
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('jsonOutput');
+            output.select();
+            document.execCommand('copy');
+            alert('JSON copied to clipboard!');
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('d-none');
+        }
+    </script>
+} 

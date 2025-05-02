@@ -1,0 +1,166 @@
+@{
+    ViewData["Title"] = "Unit Converter";
+}
+
+<div class="container">
+    <h2 class="mb-4">Unit Converter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form id="converterForm" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="conversionType" class="form-label">Conversion Type</label>
+                        <select class="form-select" id="conversionType" required>
+                            <option value="">Select type...</option>
+                            <option value="length">Length</option>
+                            <option value="weight">Weight</option>
+                            <option value="temperature">Temperature</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="fromUnit" class="form-label">From Unit</label>
+                        <select class="form-select" id="fromUnit" required disabled>
+                            <option value="">Select unit...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="toUnit" class="form-label">To Unit</label>
+                        <select class="form-select" id="toUnit" required disabled>
+                            <option value="">Select unit...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="value" class="form-label">Value</label>
+                    <input type="number" class="form-control" id="value" required step="any">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Convert</button>
+            </form>
+
+            <div class="mt-4" id="conversionResult" style="display: none;">
+                <h4>Result</h4>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p class="mb-1"><span id="fromValue"></span> <span id="fromUnitText"></span> = <span id="toValue"></span> <span id="toUnitText"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const units = {
+            length: [
+                { value: 'mm', label: 'Millimeters' },
+                { value: 'cm', label: 'Centimeters' },
+                { value: 'm', label: 'Meters' },
+                { value: 'km', label: 'Kilometers' },
+                { value: 'in', label: 'Inches' },
+                { value: 'ft', label: 'Feet' },
+                { value: 'yd', label: 'Yards' },
+                { value: 'mi', label: 'Miles' }
+            ],
+            weight: [
+                { value: 'mg', label: 'Milligrams' },
+                { value: 'g', label: 'Grams' },
+                { value: 'kg', label: 'Kilograms' },
+                { value: 't', label: 'Metric Tons' },
+                { value: 'oz', label: 'Ounces' },
+                { value: 'lb', label: 'Pounds' },
+                { value: 'st', label: 'Stones' }
+            ],
+            temperature: [
+                { value: 'c', label: 'Celsius' },
+                { value: 'f', label: 'Fahrenheit' },
+                { value: 'k', label: 'Kelvin' }
+            ]
+        };
+
+        const conversionFactors = {
+            length: {
+                mm: 1,
+                cm: 10,
+                m: 1000,
+                km: 1000000,
+                in: 25.4,
+                ft: 304.8,
+                yd: 914.4,
+                mi: 1609344
+            },
+            weight: {
+                mg: 1,
+                g: 1000,
+                kg: 1000000,
+                t: 1000000000,
+                oz: 28349.5,
+                lb: 453592,
+                st: 6350290
+            }
+        };
+
+        document.getElementById('conversionType').addEventListener('change', function() {
+            const type = this.value;
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            
+            fromUnit.innerHTML = '<option value="">Select unit...</option>';
+            toUnit.innerHTML = '<option value="">Select unit...</option>';
+            
+            if (type) {
+                units[type].forEach(unit => {
+                    fromUnit.innerHTML += `<option value="${unit.value}">${unit.label}</option>`;
+                    toUnit.innerHTML += `<option value="${unit.value}">${unit.label}</option>`;
+                });
+                fromUnit.disabled = false;
+                toUnit.disabled = false;
+            } else {
+                fromUnit.disabled = true;
+                toUnit.disabled = true;
+            }
+        });
+
+        document.getElementById('converterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('conversionType').value;
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const value = parseFloat(document.getElementById('value').value);
+            
+            if (type === 'temperature') {
+                let result;
+                if (fromUnit === 'c') {
+                    if (toUnit === 'f') result = (value * 9/5) + 32;
+                    else if (toUnit === 'k') result = value + 273.15;
+                } else if (fromUnit === 'f') {
+                    if (toUnit === 'c') result = (value - 32) * 5/9;
+                    else if (toUnit === 'k') result = (value - 32) * 5/9 + 273.15;
+                } else if (fromUnit === 'k') {
+                    if (toUnit === 'c') result = value - 273.15;
+                    else if (toUnit === 'f') result = (value - 273.15) * 9/5 + 32;
+                }
+                
+                document.getElementById('fromValue').textContent = value;
+                document.getElementById('toValue').textContent = result.toFixed(2);
+            } else {
+                const fromFactor = conversionFactors[type][fromUnit];
+                const toFactor = conversionFactors[type][toUnit];
+                const result = (value * fromFactor) / toFactor;
+                
+                document.getElementById('fromValue').textContent = value;
+                document.getElementById('toValue').textContent = result.toFixed(2);
+            }
+            
+            document.getElementById('fromUnitText').textContent = units[type].find(u => u.value === fromUnit).label;
+            document.getElementById('toUnitText').textContent = units[type].find(u => u.value === toUnit).label;
+            document.getElementById('conversionResult').style.display = 'block';
+        });
+    </script>
+} 

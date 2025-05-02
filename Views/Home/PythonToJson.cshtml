@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Python to JSON";
+}
+
+<div class="container">
+    <h2 class="mb-4">Python Class to JSON Converter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="pythonInput" class="form-label">Python Class Input</label>
+                    <textarea class="form-control" id="pythonInput" rows="15" placeholder="Paste your Python class here..."></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="jsonOutput" class="form-label">JSON Output</label>
+                    <textarea class="form-control" id="jsonOutput" rows="15" readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button onclick="convertToJson()" class="btn btn-primary">Convert to JSON</button>
+                <button onclick="clearInputs()" class="btn btn-outline-danger">Clear</button>
+                <button onclick="copyToClipboard()" class="btn btn-outline-secondary">Copy JSON</button>
+            </div>
+
+            <div class="alert alert-danger d-none" id="error"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function convertToJson() {
+            try {
+                const pythonInput = document.getElementById('pythonInput').value;
+                if (!pythonInput) {
+                    throw new Error('Please enter Python class to convert');
+                }
+
+                const json = parsePythonToJson(pythonInput);
+                document.getElementById('jsonOutput').value = JSON.stringify(json, null, 2);
+                document.getElementById('error').classList.add('d-none');
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        function parsePythonToJson(pythonCode) {
+            const properties = {};
+            const lines = pythonCode.split('\n');
+            
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine.includes(':')) {
+                    const [field, type] = trimmedLine.split(':').map(s => s.trim());
+                    if (field && !field.startsWith('def') && !field.startsWith('class')) {
+                        properties[field] = getDefaultValue(type);
+                    }
+                }
+            }
+            
+            return properties;
+        }
+
+        function getDefaultValue(type) {
+            if (!type) return null;
+            
+            type = type.toLowerCase();
+            if (type.includes('list')) return [];
+            if (type.includes('dict')) return {};
+            if (type.includes('str')) return '';
+            if (type.includes('int')) return 0;
+            if (type.includes('float')) return 0.0;
+            if (type.includes('bool')) return false;
+            if (type.includes('datetime')) return new Date().toISOString();
+            return null;
+        }
+
+        function clearInputs() {
+            document.getElementById('pythonInput').value = '';
+            document.getElementById('jsonOutput').value = '';
+            document.getElementById('error').classList.add('d-none');
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('jsonOutput');
+            output.select();
+            document.execCommand('copy');
+            alert('JSON copied to clipboard!');
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('d-none');
+        }
+    </script>
+} 

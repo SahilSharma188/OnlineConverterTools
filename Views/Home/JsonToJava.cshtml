@@ -1,0 +1,116 @@
+@{
+    ViewData["Title"] = "JSON to Java";
+}
+
+<div class="container">
+    <h2 class="mb-4">JSON to Java Class Converter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="jsonInput" class="form-label">JSON Input</label>
+                    <textarea class="form-control" id="jsonInput" rows="15" placeholder="Paste your JSON here..."></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="javaOutput" class="form-label">Java Output</label>
+                    <textarea class="form-control" id="javaOutput" rows="15" readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button onclick="convertToJava()" class="btn btn-primary">Convert to Java</button>
+                <button onclick="clearInputs()" class="btn btn-outline-danger">Clear</button>
+                <button onclick="copyToClipboard()" class="btn btn-outline-secondary">Copy Java Code</button>
+            </div>
+
+            <div class="alert alert-danger d-none" id="error"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function convertToJava() {
+            try {
+                const jsonInput = document.getElementById('jsonInput').value;
+                if (!jsonInput) {
+                    throw new Error('Please enter JSON to convert');
+                }
+
+                const json = JSON.parse(jsonInput);
+                const javaCode = generateJavaClass(json);
+                document.getElementById('javaOutput').value = javaCode;
+                document.getElementById('error').classList.add('d-none');
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        function generateJavaClass(json, className = 'RootObject') {
+            let code = `public class ${className} {\n`;
+            
+            // Generate fields
+            for (const [key, value] of Object.entries(json)) {
+                const fieldName = key.charAt(0).toLowerCase() + key.slice(1);
+                const fieldType = getJavaType(value);
+                code += `    private ${fieldType} ${fieldName};\n`;
+            }
+            
+            code += '\n';
+            
+            // Generate getters and setters
+            for (const [key, value] of Object.entries(json)) {
+                const fieldName = key.charAt(0).toLowerCase() + key.slice(1);
+                const methodName = key.charAt(0).toUpperCase() + key.slice(1);
+                const fieldType = getJavaType(value);
+                
+                // Getter
+                code += `    public ${fieldType} get${methodName}() {\n`;
+                code += `        return ${fieldName};\n`;
+                code += `    }\n\n`;
+                
+                // Setter
+                code += `    public void set${methodName}(${fieldType} ${fieldName}) {\n`;
+                code += `        this.${fieldName} = ${fieldName};\n`;
+                code += `    }\n\n`;
+            }
+            
+            code += '}';
+            return code;
+        }
+
+        function getJavaType(value) {
+            if (value === null) return 'Object';
+            if (Array.isArray(value)) {
+                if (value.length === 0) return 'List<Object>';
+                return `List<${getJavaType(value[0])}>`;
+            }
+            if (typeof value === 'object') return 'Object';
+            if (typeof value === 'string') return 'String';
+            if (typeof value === 'number') {
+                return Number.isInteger(value) ? 'Integer' : 'Double';
+            }
+            if (typeof value === 'boolean') return 'Boolean';
+            return 'Object';
+        }
+
+        function clearInputs() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('javaOutput').value = '';
+            document.getElementById('error').classList.add('d-none');
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('javaOutput');
+            output.select();
+            document.execCommand('copy');
+            alert('Java code copied to clipboard!');
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('error').classList.remove('d-none');
+        }
+    </script>
+} 

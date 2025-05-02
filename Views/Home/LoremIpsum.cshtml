@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Lorem Ipsum Generator";
+}
+
+<div class="container">
+    <h2 class="mb-4">Lorem Ipsum Generator</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form id="loremForm" class="needs-validation" novalidate>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="paragraphs" class="form-label">Number of Paragraphs</label>
+                        <input type="number" class="form-control" id="paragraphs" min="1" max="10" value="3" required>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="wordsPerParagraph" class="form-label">Words per Paragraph</label>
+                        <input type="number" class="form-control" id="wordsPerParagraph" min="10" max="100" value="50" required>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="startWithLorem" class="form-label">Start with "Lorem ipsum"</label>
+                        <select class="form-select" id="startWithLorem">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Generate</button>
+            </form>
+
+            <div class="mt-4" id="result" style="display: none;">
+                <h4>Generated Text</h4>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div id="generatedText"></div>
+                        <button onclick="copyToClipboard()" class="btn btn-sm btn-outline-primary mt-3">Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const loremWords = [
+            'lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit',
+            'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore',
+            'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation',
+            'ullamco', 'laboris', 'nisi', 'aliquip', 'ex', 'ea', 'commodo', 'consequat',
+            'duis', 'aute', 'irure', 'dolor', 'in', 'reprehenderit', 'voluptate', 'velit',
+            'esse', 'cillum', 'dolore', 'eu', 'fugiat', 'nulla', 'pariatur', 'excepteur',
+            'sint', 'occaecat', 'cupidatat', 'non', 'proident', 'sunt', 'in', 'culpa', 'qui',
+            'officia', 'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum'
+        ];
+
+        document.getElementById('loremForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const paragraphs = parseInt(document.getElementById('paragraphs').value);
+            const wordsPerParagraph = parseInt(document.getElementById('wordsPerParagraph').value);
+            const startWithLorem = document.getElementById('startWithLorem').value === 'true';
+            
+            let result = '';
+            
+            for (let i = 0; i < paragraphs; i++) {
+                let paragraph = '';
+                if (i === 0 && startWithLorem) {
+                    paragraph = 'Lorem ipsum dolor sit amet, ';
+                }
+                
+                const words = [];
+                const count = i === 0 && startWithLorem ? wordsPerParagraph - 5 : wordsPerParagraph;
+                
+                for (let j = 0; j < count; j++) {
+                    const word = loremWords[Math.floor(Math.random() * loremWords.length)];
+                    words.push(j === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word);
+                }
+                
+                paragraph += words.join(' ') + '.';
+                result += `<p>${paragraph}</p>`;
+            }
+            
+            document.getElementById('generatedText').innerHTML = result;
+            document.getElementById('result').style.display = 'block';
+        });
+
+        function copyToClipboard() {
+            const text = document.getElementById('generatedText').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Text copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+} 

@@ -1,0 +1,119 @@
+@{
+    ViewData["Title"] = "XML to JSON";
+}
+
+<div class="container">
+    <h2 class="mb-4">XML to JSON Converter</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="xmlInput" class="form-label">XML Input</label>
+                    <textarea class="form-control" id="xmlInput" rows="15" placeholder="Paste your XML here..."></textarea>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="jsonOutput" class="form-label">JSON Output</label>
+                    <textarea class="form-control" id="jsonOutput" rows="15" readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2 mb-3">
+                <button onclick="convertToJson()" class="btn btn-primary">Convert to JSON</button>
+                <button onclick="clearInputs()" class="btn btn-outline-danger">Clear</button>
+                <button onclick="copyToClipboard()" class="btn btn-outline-secondary">Copy JSON</button>
+            </div>
+
+            <div class="alert alert-danger d-none" id="error"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        @{
+            var jsCode = @"
+                function convertToJson() {
+                    try {
+                        const xmlInput = document.getElementById('xmlInput').value;
+                        if (!xmlInput) {
+                            throw new Error('Please enter XML to convert');
+                        }
+
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(xmlInput, 'text/xml');
+                        
+                        if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                            throw new Error('Invalid XML format');
+                        }
+
+                        const json = xmlToJson(xmlDoc.documentElement);
+                        document.getElementById('jsonOutput').value = JSON.stringify(json, null, 2);
+                        document.getElementById('error').classList.add('d-none');
+                    } catch (e) {
+                        showError(e.message);
+                    }
+                }
+
+                function xmlToJson(xml) {
+                    let obj = {};
+
+                    if (xml.nodeType === 1) {
+                        if (xml.attributes.length > 0) {
+                            obj['@attributes'] = {};
+                            for (let j = 0; j < xml.attributes.length; j++) {
+                                const attribute = xml.attributes.item(j);
+                                obj['@attributes'][attribute.nodeName] = attribute.nodeValue;
+                            }
+                        }
+                    } else if (xml.nodeType === 3) {
+                        obj = xml.nodeValue;
+                    }
+
+                    if (xml.hasChildNodes()) {
+                        for (let i = 0; i < xml.childNodes.length; i++) {
+                            const item = xml.childNodes.item(i);
+                            const nodeName = item.nodeName;
+                            
+                            if (nodeName === '#text' && item.nodeValue.trim() === '') {
+                                continue;
+                            }
+                            
+                            if (typeof obj[nodeName] === 'undefined') {
+                                obj[nodeName] = xmlToJson(item);
+                            } else {
+                                if (typeof obj[nodeName].push === 'undefined') {
+                                    const old = obj[nodeName];
+                                    obj[nodeName] = [];
+                                    obj[nodeName].push(old);
+                                }
+                                obj[nodeName].push(xmlToJson(item));
+                            }
+                        }
+                    }
+                    
+                    return obj;
+                }
+
+                function clearInputs() {
+                    document.getElementById('xmlInput').value = '';
+                    document.getElementById('jsonOutput').value = '';
+                    document.getElementById('error').classList.add('d-none');
+                }
+
+                function copyToClipboard() {
+                    const output = document.getElementById('jsonOutput');
+                    output.select();
+                    document.execCommand('copy');
+                    alert('JSON copied to clipboard!');
+                }
+
+                function showError(message) {
+                    document.getElementById('error').textContent = message;
+                    document.getElementById('error').classList.remove('d-none');
+                }
+            ";
+        }
+        @Html.Raw(jsCode)
+    </script>
+} 
